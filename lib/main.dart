@@ -4,6 +4,7 @@ import 'donnees.dart';
 import 'ecran_detail.dart';
 import 'ecran_echeances.dart';
 import 'ecran_formulaire.dart';
+import 'ecran_calendrier.dart';
 import 'models.dart';
 import 'repository.dart';
 
@@ -38,7 +39,7 @@ class _AccueilState extends State<Accueil> {
   bool _simulerErreur = false;
   bool _chargement = false;
   Filtre _filtre = Filtre.toutes;
-  int? _selectionId; // tâche affichée à droite en mode tablette
+  int? _selectionId;
   List<Task>? _taches;
   Object? _erreur;
 
@@ -48,7 +49,7 @@ class _AccueilState extends State<Accueil> {
     _charger();
   }
 
-  // Les trois états d'un Future : en cours, valeur, erreur.
+
   Future<void> _charger() async {
     setState(() {
       _chargement = true;
@@ -70,7 +71,7 @@ class _AccueilState extends State<Accueil> {
     }
   }
 
-  // Objet immuable : on remplace la tâche par une copie modifiée.
+
   void _remplacer(Task modifiee) {
     final liste = _taches;
     if (liste == null) return;
@@ -83,7 +84,7 @@ class _AccueilState extends State<Accueil> {
     _remplacer(tache.copyWith(terminee: !tache.terminee));
   }
 
-  // Téléphone : le détail est poussé sur la pile d'écrans.
+
   void _ouvrirDetail(Task tache) {
     Navigator.push(
       context,
@@ -121,7 +122,7 @@ class _AccueilState extends State<Accueil> {
     );
   }
 
-  // Écran 1 + version tablette : LayoutBuilder à 840 dp.
+
   Widget _vueEcheances() {
     if (_chargement) {
       return const Center(child: CircularProgressIndicator());
@@ -178,6 +179,36 @@ class _AccueilState extends State<Accueil> {
     );
   }
 
+  Widget _vueCalendrier() {
+    if (_chargement) {
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    if (_erreur != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('Erreur : $_erreur'),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: _charger,
+              child: const Text('Réessayer'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return EcranCalendrier(
+      taches: _taches ?? <Task>[],
+      onOuvrir: _ouvrirDetail,
+      onBasculer: _basculer,
+    );
+  }
+
   Widget _vueCours() {
     final toutes = _taches ?? <Task>[];
     return ListView(
@@ -224,25 +255,65 @@ class _AccueilState extends State<Accueil> {
 
   @override
   Widget build(BuildContext context) {
-    const titres = ['Échéances', 'Cours', 'Profil'];
-    final vues = [_vueEcheances(), _vueCours(), _vueProfil()];
+    const titres = [
+      'Échéances',
+      'Calendrier',
+      'Cours',
+      'Profil',
+    ];
+
+    final vues = [
+      _vueEcheances(),
+      _vueCalendrier(),
+      _vueCours(),
+      _vueProfil(),
+    ];
+
     return Scaffold(
-      appBar: AppBar(title: Text(titres[_onglet])),
+      appBar: AppBar(
+        title: Text(titres[_onglet]),
+      ),
+
       body: vues[_onglet],
-      floatingActionButton: _onglet == 0 && _taches != null
+
+      floatingActionButton:
+      (_onglet == 0 || _onglet == 1) && _taches != null
           ? FloatingActionButton(
         onPressed: _ajouter,
         tooltip: 'Nouvelle tâche',
         child: const Icon(Icons.add),
       )
           : null,
+
       bottomNavigationBar: NavigationBar(
         selectedIndex: _onglet,
-        onDestinationSelected: (i) => setState(() => _onglet = i),
+
+        onDestinationSelected: (i) {
+          setState(() {
+            _onglet = i;
+          });
+        },
+
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.checklist), label: 'Échéances'),
-          NavigationDestination(icon: Icon(Icons.school), label: 'Cours'),
-          NavigationDestination(icon: Icon(Icons.person), label: 'Profil'),
+          NavigationDestination(
+            icon: Icon(Icons.checklist),
+            label: 'Échéances',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.calendar_month),
+            label: 'Calendrier',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.school),
+            label: 'Cours',
+          ),
+
+          NavigationDestination(
+            icon: Icon(Icons.person),
+            label: 'Profil',
+          ),
         ],
       ),
     );
