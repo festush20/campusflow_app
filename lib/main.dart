@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 
 import 'donnees.dart';
+import 'ecran_calendrier.dart';
 import 'ecran_detail.dart';
 import 'ecran_echeances.dart';
 import 'ecran_formulaire.dart';
-import 'ecran_calendrier.dart';
+import 'ecran_titre.dart';
 import 'models.dart';
 import 'repository.dart';
+import 'theme.dart';
 
 void main() => runApp(const CampusFlowApp());
 
@@ -18,11 +20,14 @@ class CampusFlowApp extends StatelessWidget {
     return MaterialApp(
       title: 'CampusFlow',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFEC3013)),
-        useMaterial3: true,
+      theme: AppTheme.clair(),
+      home: Builder(
+        builder: (context) => EcranTitre(
+          onCommencer: () => Navigator.of(context).pushReplacement(
+            MaterialPageRoute<void>(builder: (_) => const Accueil()),
+          ),
+        ),
       ),
-      home: const Accueil(),
     );
   }
 }
@@ -39,7 +44,7 @@ class _AccueilState extends State<Accueil> {
   bool _simulerErreur = false;
   bool _chargement = false;
   Filtre _filtre = Filtre.toutes;
-  int? _selectionId;
+  int? _selectionId; // tâche affichée à droite en mode tablette
   List<Task>? _taches;
   Object? _erreur;
 
@@ -49,7 +54,7 @@ class _AccueilState extends State<Accueil> {
     _charger();
   }
 
-
+  // Les trois états d'un Future : en cours, valeur, erreur.
   Future<void> _charger() async {
     setState(() {
       _chargement = true;
@@ -71,7 +76,7 @@ class _AccueilState extends State<Accueil> {
     }
   }
 
-
+  // Objet immuable : on remplace la tâche par une copie modifiée.
   void _remplacer(Task modifiee) {
     final liste = _taches;
     if (liste == null) return;
@@ -84,7 +89,7 @@ class _AccueilState extends State<Accueil> {
     _remplacer(tache.copyWith(terminee: !tache.terminee));
   }
 
-
+  // Téléphone : le détail est poussé sur la pile d'écrans.
   void _ouvrirDetail(Task tache) {
     Navigator.push(
       context,
@@ -122,8 +127,8 @@ class _AccueilState extends State<Accueil> {
     );
   }
 
-
-  Widget _vueEcheances() {
+  // Chargement ou erreur : partagé par les onglets Échéances et Calendrier.
+  Widget? _etatSpecial() {
     if (_chargement) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -147,6 +152,13 @@ class _AccueilState extends State<Accueil> {
         ),
       );
     }
+    return null;
+  }
+
+  // Écran 1 + version tablette : LayoutBuilder à 840 dp.
+  Widget _vueEcheances() {
+    final special = _etatSpecial();
+    if (special != null) return special;
     final toutes = _taches ?? <Task>[];
     return LayoutBuilder(
       builder: (context, contraintes) {
@@ -180,28 +192,8 @@ class _AccueilState extends State<Accueil> {
   }
 
   Widget _vueCalendrier() {
-    if (_chargement) {
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
-
-    if (_erreur != null) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text('Erreur : $_erreur'),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: _charger,
-              child: const Text('Réessayer'),
-            ),
-          ],
-        ),
-      );
-    }
-
+    final special = _etatSpecial();
+    if (special != null) return special;
     return EcranCalendrier(
       taches: _taches ?? <Task>[],
       onOuvrir: _ouvrirDetail,
@@ -211,13 +203,26 @@ class _AccueilState extends State<Accueil> {
 
   Widget _vueCours() {
     final toutes = _taches ?? <Task>[];
+    final couleurs = Theme.of(context).colorScheme;
     return ListView(
+      padding: const EdgeInsets.all(16),
       children: coursDemo.map((c) {
-        final nombre = toutes.where((t) => t.coursId == c.id).length;
-        return ListTile(
-          leading: const Icon(Icons.menu_book, semanticLabel: 'Cours'),
-          title: Text(c.nom),
-          subtitle: Text('${c.enseignant} · $nombre tâche(s)'),
+        final duCours = toutes.where((t) => t.coursId == c.id).toList();
+        final faites = duCours.where((t) => t.terminee).length;
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: ListTile(
+            contentPadding: const EdgeInsets.all(16),
+            leading: CircleAvatar(
+              backgroundColor: couleurs.primaryContainer,
+              foregroundColor: couleurs.onPrimaryContainer,
+              child: Text(c.nom.substring(0, 1)),
+            ),
+            title: Text(c.nom),
+            subtitle: Text(
+              '${c.enseignant} · ${duCours.length} tâche(s), $faites terminée(s)',
+            ),
+          ),
         );
       }).toList(),
     );
@@ -225,23 +230,40 @@ class _AccueilState extends State<Accueil> {
 
   Widget _vueProfil() {
     const utilisateur = User(id: 1, nom: 'Festus', email: 'festus@exemple.com');
+    final couleurs = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
-        ListTile(
-          leading: const CircleAvatar(
-            child: Icon(Icons.person, semanticLabel: 'Profil'),
+        Column(
+          children: [
+            CircleAvatar(
+              radius: 40,
+              backgroundColor: couleurs.primary,
+              foregroundColor: couleurs.onPrimary,
+              child: Text(
+                utilisateur.nom.substring(0, 1),
+                style: const TextStyle(fontSize: 32, fontWeight: FontWeight.w800),
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(utilisateur.nom, style: Theme.of(context).textTheme.titleLarge),
+            Text(utilisateur.email),
+            const SizedBox(height: 20),
+          ],
+        ),
+        Card(
+          child: Column(
+            children: [
+              SwitchListTile(
+                title: const Text('Simuler une erreur réseau'),
+                subtitle: const Text('Pour tester le message et « Réessayer »'),
+                value: _simulerErreur,
+                onChanged: (v) => setState(() => _simulerErreur = v),
+              ),
+            ],
           ),
-          title: Text(utilisateur.nom),
-          subtitle: Text(utilisateur.email),
         ),
-        const Divider(),
-        SwitchListTile(
-          title: const Text('Simuler une erreur réseau'),
-          value: _simulerErreur,
-          onChanged: (v) => setState(() => _simulerErreur = v),
-        ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 16),
         FilledButton(
           onPressed: () {
             setState(() => _onglet = 0);
@@ -255,65 +277,29 @@ class _AccueilState extends State<Accueil> {
 
   @override
   Widget build(BuildContext context) {
-    const titres = [
-      'Échéances',
-      'Calendrier',
-      'Cours',
-      'Profil',
-    ];
-
-    final vues = [
-      _vueEcheances(),
-      _vueCalendrier(),
-      _vueCours(),
-      _vueProfil(),
-    ];
-
+    const titres = ['Échéances', 'Calendrier', 'Cours', 'Profil'];
+    final vues = [_vueEcheances(), _vueCalendrier(), _vueCours(), _vueProfil()];
     return Scaffold(
-      appBar: AppBar(
-        title: Text(titres[_onglet]),
-      ),
-
+      appBar: AppBar(title: Text(titres[_onglet])),
       body: vues[_onglet],
-
-      floatingActionButton:
-      (_onglet == 0 || _onglet == 1) && _taches != null
+      floatingActionButton: _onglet <= 1 && _taches != null
           ? FloatingActionButton(
         onPressed: _ajouter,
         tooltip: 'Nouvelle tâche',
         child: const Icon(Icons.add),
       )
           : null,
-
       bottomNavigationBar: NavigationBar(
         selectedIndex: _onglet,
-
-        onDestinationSelected: (i) {
-          setState(() {
-            _onglet = i;
-          });
-        },
-
+        onDestinationSelected: (i) => setState(() => _onglet = i),
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.checklist),
-            label: 'Échéances',
-          ),
-
+          NavigationDestination(icon: Icon(Icons.checklist), label: 'Échéances'),
           NavigationDestination(
             icon: Icon(Icons.calendar_month),
             label: 'Calendrier',
           ),
-
-          NavigationDestination(
-            icon: Icon(Icons.school),
-            label: 'Cours',
-          ),
-
-          NavigationDestination(
-            icon: Icon(Icons.person),
-            label: 'Profil',
-          ),
+          NavigationDestination(icon: Icon(Icons.school), label: 'Cours'),
+          NavigationDestination(icon: Icon(Icons.person), label: 'Profil'),
         ],
       ),
     );
