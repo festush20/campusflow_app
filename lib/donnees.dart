@@ -1,3 +1,5 @@
+import 'package:intl/intl.dart'; // package ajouté avec : flutter pub add intl
+
 import 'models.dart';
 
 // Cours de démonstration (utilisés par l'onglet Cours et le formulaire).
@@ -17,10 +19,12 @@ String? nomDuCours(int? id) {
   return null;
 }
 
+/// Ex. « 29/10/2026 à 17h00 » (format fait avec intl).
 String formatDate(DateTime d) {
-  final jour = d.day.toString().padLeft(2, '0');
-  final mois = d.month.toString().padLeft(2, '0');
-  final heure = d.hour.toString().padLeft(2, '0');
-  final minute = d.minute.toString().padLeft(2, '0');
-  return '$jour/$mois/${d.year} à ${heure}h$minute';
+  final jour = DateFormat('dd/MM/yyyy').format(d);
+  final heure = DateFormat("HH'h'mm").format(d);
+  return '$jour à $heure';
 }
+
+/// Ex. « 29/10 ».
+String formatJourCourt(DateTime d) => DateFormat('dd/MM').format(d);
