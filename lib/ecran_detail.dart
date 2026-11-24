@@ -12,13 +12,40 @@ Widget _ligneInfo(IconData icone, String titre, String valeur) {
   );
 }
 
-/// Contenu du détail, sans Scaffold : on peut l'afficher seul (téléphone)
+/// Contenu du détail, sans Scaffold : affiché seul (téléphone)
 /// ou à droite de la liste (tablette).
 class DetailContenu extends StatelessWidget {
   final Task tache;
   final ValueChanged<Task> onChange;
+  final VoidCallback? onSupprimer;
 
-  const DetailContenu({super.key, required this.tache, required this.onChange});
+  const DetailContenu({
+    super.key,
+    required this.tache,
+    required this.onChange,
+    this.onSupprimer,
+  });
+
+  Future<void> _confirmerSuppression(BuildContext context) async {
+    final confirme = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Supprimer cette tâche ?'),
+        content: Text(tache.titre),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Supprimer'),
+          ),
+        ],
+      ),
+    );
+    if (confirme == true) onSupprimer?.call();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,36 +93,16 @@ class DetailContenu extends StatelessWidget {
               tache.terminee ? 'Marquer comme à faire' : 'Marquer comme fait',
             ),
           ),
+          if (onSupprimer != null) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: () => _confirmerSuppression(context),
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Supprimer la tâche'),
+            ),
+          ],
         ],
       ),
-    );
-  }
-}
-
-/// Écran de détail poussé sur la pile (téléphone).
-class EcranDetail extends StatefulWidget {
-  final Task tache;
-  final ValueChanged<Task> onChange;
-
-  const EcranDetail({super.key, required this.tache, required this.onChange});
-
-  @override
-  State<EcranDetail> createState() => _EcranDetailState();
-}
-
-class _EcranDetailState extends State<EcranDetail> {
-  late Task _tache = widget.tache;
-
-  void _changer(Task modifiee) {
-    setState(() => _tache = modifiee);
-    widget.onChange(modifiee);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(_tache.titre)),
-      body: DetailContenu(tache: _tache, onChange: _changer),
     );
   }
 }

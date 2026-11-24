@@ -3,7 +3,7 @@ class Task {
   final String titre;
   final DateTime echeance;
   final bool terminee;
-  final String? description; // facultative -> String?
+  final String? description;
   final int? coursId;
 
   const Task({
@@ -32,13 +32,23 @@ class Task {
       );
 
   factory Task.fromJson(Map<String, dynamic> json) => Task(
-        id: json['id'] as int,
-        titre: json['titre'] as String,
-        echeance: DateTime.parse(json['echeance'] as String),
-        terminee: json['terminee'] as bool? ?? false,
-        description: json['description'] as String?,
-        coursId: json['coursId'] as int?,
-      );
+    id: json['id'] as int,
+    titre: json['titre'] as String,
+    echeance: DateTime.parse(json['echeance'] as String),
+    terminee: json['terminee'] as bool? ?? false,
+    description: json['description'] as String?,
+    coursId: json['coursId'] as int?,
+  );
+
+  /// Objet vers JSON : utilisé pour créer une tâche sur le serveur (POST).
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'titre': titre,
+    'echeance': echeance.toIso8601String(),
+    'terminee': terminee,
+    'description': description,
+    'coursId': coursId,
+  };
 }
 
 class Course {
@@ -53,16 +63,16 @@ class Course {
   });
 
   Course copyWith({String? nom, String? enseignant}) => Course(
-        id: id,
-        nom: nom ?? this.nom,
-        enseignant: enseignant ?? this.enseignant,
-      );
+    id: id,
+    nom: nom ?? this.nom,
+    enseignant: enseignant ?? this.enseignant,
+  );
 
   factory Course.fromJson(Map<String, dynamic> json) => Course(
-        id: json['id'] as int,
-        nom: json['nom'] as String,
-        enseignant: json['enseignant'] as String,
-      );
+    id: json['id'] as int,
+    nom: json['nom'] as String,
+    enseignant: json['enseignant'] as String,
+  );
 }
 
 class User {
@@ -73,14 +83,14 @@ class User {
   const User({required this.id, required this.nom, required this.email});
 
   User copyWith({String? nom, String? email}) => User(
-        id: id,
-        nom: nom ?? this.nom,
-        email: email ?? this.email,
-      );
+    id: id,
+    nom: nom ?? this.nom,
+    email: email ?? this.email,
+  );
 
   factory User.fromJson(Map<String, dynamic> json) => User(
-        id: json['id'] as int,
-        nom: json['nom'] as String,
-        email: json['email'] as String,
-      );
+    id: json['id'] as int,
+    nom: json['nom'] as String,
+    email: json['email'] as String,
+  );
 }

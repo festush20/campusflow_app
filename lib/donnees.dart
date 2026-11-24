@@ -9,7 +9,7 @@ const coursDemo = [
   Course(id: 3, nom: 'Services Web SOAP', enseignant: 'Enseignant 3'),
 ];
 
-enum Filtre { toutes, semaine, aFaire }
+enum Filtre { toutes, aFaire, faites, enRetard }
 
 String? nomDuCours(int? id) {
   if (id == null) return null;

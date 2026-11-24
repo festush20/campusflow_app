@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'donnees.dart';
 import 'models.dart';
@@ -42,8 +43,7 @@ class _FormulaireTacheState extends State<FormulaireTache> {
     final form = _formKey.currentState;
     if (form == null || !form.validate()) return;
     final description = _description.text.trim();
-    Navigator.pop(
-      context,
+    context.pop(
       Task(
         id: widget.nouvelId,
         titre: _titre.text.trim(),

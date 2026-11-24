@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'donnees.dart';
 import 'models.dart';
 
-/// Écran Échéances : bandeau de statistiques, filtres, puis ListView.builder de cartes.
 class ListeEcheances extends StatelessWidget {
   final List<Task> taches;
+  final List<Task> visibles;
   final Filtre filtre;
   final int? selectionId; // tâche mise en évidence (mode tablette)
   final ValueChanged<Filtre> onFiltre;
@@ -15,6 +15,7 @@ class ListeEcheances extends StatelessWidget {
   const ListeEcheances({
     super.key,
     required this.taches,
+    required this.visibles,
     required this.filtre,
     required this.onFiltre,
     required this.onOuvrir,
@@ -30,17 +31,6 @@ class ListeEcheances extends StatelessWidget {
   }
 
   bool _enRetard(Task t) => !t.terminee && t.echeance.isBefore(DateTime.now());
-
-  bool _correspond(Task t) {
-    switch (filtre) {
-      case Filtre.toutes:
-        return true;
-      case Filtre.semaine:
-        return _estCetteSemaine(t);
-      case Filtre.aFaire:
-        return !t.terminee;
-    }
-  }
 
   Widget _stat(BuildContext context, String valeur, String libelle) {
     final couleurs = Theme.of(context).colorScheme;
@@ -137,8 +127,9 @@ class ListeEcheances extends StatelessWidget {
         runSpacing: 4,
         children: [
           _puceFiltre('Toutes', Filtre.toutes),
-          _puceFiltre('Cette semaine', Filtre.semaine),
           _puceFiltre('À faire', Filtre.aFaire),
+          _puceFiltre('Faites', Filtre.faites),
+          _puceFiltre('En retard', Filtre.enRetard),
         ],
       ),
     );
@@ -280,10 +271,9 @@ class ListeEcheances extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visibles = taches.where(_correspond).toList()
-      ..sort((a, b) => a.echeance.compareTo(b.echeance));
+    final tries = [...visibles]..sort((a, b) => a.echeance.compareTo(b.echeance));
     // Index 0 : bandeau + filtres. Ensuite une carte par tâche (ou un message vide).
-    final nombre = 1 + (visibles.isEmpty ? 1 : visibles.length);
+    final nombre = 1 + (tries.isEmpty ? 1 : tries.length);
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 96),
       itemCount: nombre,
@@ -291,13 +281,13 @@ class ListeEcheances extends StatelessWidget {
         if (i == 0) {
           return Column(children: [_entete(context), _filtres()]);
         }
-        if (visibles.isEmpty) {
+        if (tries.isEmpty) {
           return const Padding(
             padding: EdgeInsets.all(32),
             child: Center(child: Text('Aucune tâche pour ce filtre')),
           );
         }
-        return _carte(context, visibles[i - 1]);
+        return _carte(context, tries[i - 1]);
       },
     );
   }
