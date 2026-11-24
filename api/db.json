@@ -1,0 +1,57 @@
+{
+  "taches": [
+    {
+      "id": 1,
+      "titre": "Rendu TP Dart",
+      "echeance": "2026-11-30T17:00:00",
+      "terminee": false,
+      "description": null,
+      "coursId": null
+    },
+    {
+      "id": 2,
+      "titre": "Projet Flutter",
+      "echeance": "2026-12-04T17:00:00",
+      "terminee": false,
+      "description": "Dossier de conception v1",
+      "coursId": 1
+    },
+    {
+      "id": 3,
+      "titre": "Examen UX",
+      "echeance": "2026-11-20T08:00:00",
+      "terminee": true,
+      "description": null,
+      "coursId": null
+    },
+    {
+      "id": 4,
+      "titre": "Réviser XML et DTD",
+      "echeance": "2026-12-08T10:00:00",
+      "terminee": false,
+      "description": null,
+      "coursId": 2
+    },
+    {
+      "id": 5,
+      "titre": "Rapport SOAP",
+      "echeance": "2026-11-18T12:00:00",
+      "terminee": false,
+      "description": "Service Web à documenter",
+      "coursId": 3
+    }
+  ],
+  "cours": [
+    { "id": 1, "nom": "Programmation mobile", "enseignant": "Enseignant 1" },
+    { "id": 2, "nom": "XML et Web sémantique", "enseignant": "Enseignant 2" },
+    { "id": 3, "nom": "Services Web SOAP", "enseignant": "Enseignant 3" }
+  ],
+  "utilisateurs": [
+    {
+      "id": 1,
+      "nom": "Festus",
+      "email": "festus@campusflow.bf",
+      "motDePasse": "1234"
+    }
+  ]
+}
